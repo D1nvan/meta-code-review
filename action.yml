@@ -1,0 +1,54 @@
+name: 'Shippie 🚢'
+description: 'an extensible code review agent'
+author: 'Matt Carey'
+inputs:
+  MODEL_STRING:
+    description: 'Model name to use for review'
+    required: true
+    default: 'openai:gpt-4.1-mini'
+  REVIEW_LANGUAGE:
+    description: 'Target natural language for translation'
+    required: false
+    default: 'English'
+  OPENAI_API_KEY:
+    description: 'OpenAI API Key'
+    required: true
+  GITHUB_TOKEN:
+    description: 'Github token'
+    required: true
+  BASE_URL:
+    description: 'AI Provider Base URL'
+    required: false
+  MAX_STEPS:
+    description: 'Maximum number of agentic steps to take'
+    required: false
+    default: '25'
+  DEBUG:
+    description: 'Enables debug logging'
+    required: false
+    default: 'false'
+runs:
+  using: 'composite'
+  steps:
+    - uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: latest
+    
+    - name: Install and Run Shippie 🚢
+      shell: bash
+      run: |
+        bun add shippie@latest
+        bun shippie review --platform=github --modelString=$MODEL_STRING --reviewLanguage=$REVIEW_LANGUAGE --maxSteps=$MAX_STEPS --baseUrl=$BASE_URL
+      env:
+        MODEL_STRING: ${{ inputs.MODEL_STRING }}
+        REVIEW_LANGUAGE: ${{ inputs.REVIEW_LANGUAGE }}
+        OPENAI_API_KEY: ${{ inputs.OPENAI_API_KEY }}
+        BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
+        BASE_URL: ${{ inputs.BASE_URL }}
+        MAX_STEPS: ${{ inputs.MAX_STEPS }}
+        DEBUG: ${{ inputs.DEBUG }}
+
+branding:
+  icon: 'code'
+  color: 'blue'
