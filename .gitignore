@@ -4,7 +4,7 @@ dist
 **/.cache/*.ts
 !jest.config.js
 *.d.ts
-.idea
+.idea/**
 **/data
 
 cdk.context.json

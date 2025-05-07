@@ -84,22 +84,22 @@ export const getFilesWithChanges = async (isCi: string | undefined, workSpace: s
     const diffCommand = getDiffCommand(isCi, workSpace);
     logger.debug('Running combined diff command:', diffCommand);
 
-    const rawCombinedDiff = await new Promise<string>((resolve, reject) => {
+    let rawCombinedDiff = await new Promise<string>((resolve, reject) => {
       // Consider increasing maxBuffer for very large diffs
       exec(
         diffCommand,
         { cwd: gitRoot, maxBuffer: 1024 * 1024 * 10 }, // 10MB buffer
         (error, stdout, stderr) => {
           if (error) {
-            return reject(new Error(`Failed to execute git diff. Error: ${error.message}`));
+            logger.warn(`Failed to execute git diff HEAD. Error: ${error.message}`);
           }
           // stderr might contain non-error messages from git
           if (stderr?.toLowerCase().includes('error')) {
-            logger.error('Git diff command stderr error:', stderr);
+            logger.warn('Git diff HEAD command stderr error:', stderr);
             // Decide if stderr errors should be fatal
             // return reject(new Error(`Git diff command error: ${stderr}`));
           } else if (stderr) {
-            logger.debug('Git diff command stderr info:', stderr);
+            logger.debug('Git diff HEAD command stderr info:', stderr);
           }
           resolve(stdout);
         }
@@ -107,10 +107,33 @@ export const getFilesWithChanges = async (isCi: string | undefined, workSpace: s
     });
 
     if (!rawCombinedDiff.trim()) {
-      logger.warn(
-        'No changes found between refs. Ensure changes are staged (if local) or refs are correct (if CI).'
-      );
-      exit(0);
+      rawCombinedDiff = await new Promise<string>((resolve, reject) => {
+        // Consider increasing maxBuffer for very large diffs
+        exec(
+            `git -C ${workSpace} diff`,
+            { cwd: gitRoot, maxBuffer: 1024 * 1024 * 10 }, // 10MB buffer
+            (error, stdout, stderr) => {
+              if (error) {
+                return reject(new Error(`Failed to execute git diff. Error: ${error.message}`));
+              }
+              // stderr might contain non-error messages from git
+              if (stderr?.toLowerCase().includes('error')) {
+                logger.error('Git diff command stderr error:', stderr);
+                // Decide if stderr errors should be fatal
+                // return reject(new Error(`Git diff command error: ${stderr}`));
+              } else if (stderr) {
+                logger.debug('Git diff command stderr info:', stderr);
+              }
+              resolve(stdout);
+            }
+        );
+      });
+      if (!rawCombinedDiff.trim()) {
+        logger.warn(
+            'No changes found between refs. Ensure changes are staged (if local) or refs are correct (if CI).'
+        );
+        exit(0);
+      }
     }
 
     const changedLinesMap = parseCombinedDiff(rawCombinedDiff, gitRoot);

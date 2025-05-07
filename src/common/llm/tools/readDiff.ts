@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { getDiffCommand } from '../../git/getChangedFilesNames';
 import type { PlatformProvider } from '../../platform/provider';
 import { logger } from '../../utils/logger';
+import { exit } from 'process';
 
 export const createReadDiffTool = (platformProvider: PlatformProvider, workSpace: string | undefined) =>
   tool({
@@ -18,22 +19,51 @@ export const createReadDiffTool = (platformProvider: PlatformProvider, workSpace
         const diffCommandBase = getDiffCommand(platformOption, workSpace);
         const diffCommand = `${diffCommandBase} -- "${path}"`;
 
-        return await new Promise<string>((resolve, reject) => {
+          let rawCombinedDiff = await new Promise<string>((resolve, reject) => {
           // Use exec like other git commands in the codebase
           exec(diffCommand, { maxBuffer: 1024 * 1024 * 10 }, (error, stdout, stderr) => {
             if (error && error.code !== 0 && error.code !== 1) {
               // Git diff can exit with code 1 when there are differences
-              logger.error(`Git diff error: ${error.message}`);
-              return reject(error);
+              logger.warn(`Git diff HEAD error: ${error.message}`);
             }
 
             if (stderr) {
-              logger.warn(`Git diff stderr: ${stderr}`);
+              logger.warn(`Git diff HEAD stderr: ${stderr}`);
             }
 
-            resolve(stdout || 'No changes detected');
+            resolve(stdout);
           });
         });
+        if (!rawCombinedDiff.trim()) {
+          rawCombinedDiff = await new Promise<string>((resolve, reject) => {
+            // Consider increasing maxBuffer for very large diffs
+            exec(
+                `git -C ${workSpace} diff -- ${path}`,
+                { maxBuffer: 1024 * 1024 * 10 }, // 10MB buffer
+                (error, stdout, stderr) => {
+                  if (error) {
+                    return reject(new Error(`Failed to execute git diff. Error: ${error.message}`));
+                  }
+                  // stderr might contain non-error messages from git
+                  if (stderr?.toLowerCase().includes('error')) {
+                    logger.error('Git diff command stderr error:', stderr);
+                    // Decide if stderr errors should be fatal
+                    // return reject(new Error(`Git diff command error: ${stderr}`));
+                  } else if (stderr) {
+                    logger.debug('Git diff command stderr info:', stderr);
+                  }
+                  resolve(stdout);
+                }
+            );
+          });
+          if (!rawCombinedDiff.trim()) {
+              logger.warn(
+                  'No changes found between refs. Ensure changes are staged (if local) or refs are correct (if CI).'
+              );
+              exit(0);
+          }
+        }
+        return rawCombinedDiff;
       } catch (error) {
         logger.error(`Failed to generate diff: ${error}`);
         return `Error generating diff: ${error instanceof Error ? error.message : String(error)}`;

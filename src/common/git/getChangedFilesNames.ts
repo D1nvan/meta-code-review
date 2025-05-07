@@ -23,7 +23,7 @@ export const getDiffCommand = (isCi: string | undefined,workSpace: string | unde
     return `git diff ${diffOptions} ${baseSha} ${azdevSha}`;
   }
   if (isCi === PlatformOptions.LOCAL) {
-    return `git -C ${workSpace} diff ${diffOptions} --cached`;
+    return `git -C ${workSpace} diff HEAD`;
   }
 
   throw new Error('Invalid CI platform');
