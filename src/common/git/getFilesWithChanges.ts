@@ -81,7 +81,7 @@ const parseCombinedDiff = (rawDiff: string, gitRoot: string): Map<string, LineRa
 export const getFilesWithChanges = async (isCi: string | undefined, workSpace: string | undefined): Promise<ReviewFile[]> => {
   try {
     const gitRoot = await getGitRootWorkSpace(workSpace);
-    const diffCommand = getDiffCommand(isCi);
+    const diffCommand = getDiffCommand(isCi, workSpace);
     logger.debug('Running combined diff command:', diffCommand);
 
     const rawCombinedDiff = await new Promise<string>((resolve, reject) => {

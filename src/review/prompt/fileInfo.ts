@@ -17,12 +17,12 @@ interface TreeNode {
  * @param workspaceRoot - The absolute path to the workspace root.
  * @returns The root TreeNode of the generated file tree.
  */
-const buildFileTree = (files: ReviewFile[], workspaceRoot: string): TreeNode => {
+const buildFileTree = (files: ReviewFile[]): TreeNode => {
   const root: TreeNode = { name: 'root', children: {} };
 
   for (const file of files) {
     // Use path relative to workspace root for building the tree structure
-    const relativePath = relative(workspaceRoot, file.fileName);
+    const relativePath =file.fileName;
     const parts = relativePath.split('/');
     let currentNode = root;
 
@@ -114,8 +114,8 @@ const formatTreeToString = (node: TreeNode, prefix = '', isLast = true): string 
  * @param goal - Optional review goal string.
  * @returns A markdown formatted string to be prepended to the AI prompt.
  */
-export const createFileInfo = (files: ReviewFile[], workspaceRoot: string): string => {
-  const fileTree = buildFileTree(files, workspaceRoot || '');
+export const createFileInfo = (files: ReviewFile[]): string => {
+  const fileTree = buildFileTree(files);
   const fileTreeString = formatTreeToString(fileTree, '', true).trim();
 
   return `Files changed for this review (paths relative to root, includes line ranges):\n${fileTreeString}\n---\n`;

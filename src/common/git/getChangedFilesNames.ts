@@ -5,7 +5,7 @@ import { getGitHubEnvVariables, getGitLabEnvVariables, gitAzdevEnvVariables } fr
 import { PlatformOptions } from '../types';
 import { logger } from '../utils/logger';
 
-export const getDiffCommand = (isCi: string | undefined): string => {
+export const getDiffCommand = (isCi: string | undefined,workSpace: string | undefined): string => {
   const diffOptions = '--diff-filter=AMRT -U0';
 
   if (isCi === PlatformOptions.GITHUB) {
@@ -22,9 +22,8 @@ export const getDiffCommand = (isCi: string | undefined): string => {
     const { azdevSha, baseSha } = gitAzdevEnvVariables();
     return `git diff ${diffOptions} ${baseSha} ${azdevSha}`;
   }
-
   if (isCi === PlatformOptions.LOCAL) {
-    return `git diff ${diffOptions} --cached`;
+    return `git -C ${workSpace} diff ${diffOptions} --cached`;
   }
 
   throw new Error('Invalid CI platform');
@@ -37,7 +36,7 @@ export const getGitRootWorkSpace = (workSpace: string | undefined): Promise<stri
     }
 
     // Combine both commands into one shell execution
-    const command = `cd "${workSpace}" && git rev-parse --show-toplevel`;
+    const command = `git -C "${workSpace}" rev-parse --show-toplevel`;
 
     logger.debug('Executing command:', command);
 

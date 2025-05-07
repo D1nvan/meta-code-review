@@ -17,7 +17,7 @@ export const constructPrompt = async (
     .replace('{ProgrammingLanguage}', languageName)
     .replace('{ReviewLanguage}', reviewLanguage);
 
-  const fileInfo = createFileInfo(files, workspaceRoot);
+  const fileInfo = createFileInfo(files);
 
   return `${languageToInstructionPrompt}\n${fileInfo}`;
 };

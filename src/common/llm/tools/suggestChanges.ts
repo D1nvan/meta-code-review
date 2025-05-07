@@ -22,10 +22,9 @@ export const createSuggestChangesTool = (platformProvider: PlatformProvider) =>
       startLine: z.number().optional().describe('The line number to start the comment at.'),
       endLine: z.number().optional().describe('The line number to end the comment at.'),
     }),
-    execute: async ({ filePath, comment, startLine, endLine }): Promise<string> => {
+    execute: async ({filePath, comment, startLine, endLine }): Promise<string> => {
       const commentBody = `### Suggestion for \`${filePath}\`\n\n${comment}`;
       try {
-        logger.debug("2222222222")
         const result = await platformProvider.postReviewComment({
           filePath,
           comment: commentBody,

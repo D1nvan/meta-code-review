@@ -63,9 +63,6 @@ export const formatUsage = (
     : currentUsage;
 
   return `
-
-
-<details>
 <summary>📊 Token Usage</summary>
 
 | Usage | Prompt Tokens | Completion Tokens | Total Tokens |

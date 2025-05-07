@@ -18,7 +18,7 @@
     "test:e2e": "bun test e2e",
     "test:unit": "bun test review configure common",
     "build": "bun run ./scripts/build.ts",
-    "postbuild": "bun run ./scripts/shebang.ts && chmod +x ./dist/index.js",
+    "postbuild": "bun run ./scripts/shebang.ts && icacls ./dist/index.js /grant Everyone:F",
     "publish:build": "bun run build && bun publish --access public",
     "check": "biome check .",
     "check:fix": "biome check . --fix",

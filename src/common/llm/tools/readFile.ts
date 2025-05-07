@@ -1,6 +1,7 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import { getLanguageName } from '../../../review/prompt/utils/fileLanguage';
+import { readFile } from "fs/promises";
 
 export const readFileTool = tool({
   description:
@@ -11,7 +12,7 @@ export const readFileTool = tool({
     endLine: z.number().optional().describe('The line number to end reading at.'),
   }),
   execute: async ({ path, startLine, endLine }) => {
-    const file = await Bun.file(path).text();
+    const file = await readFile(path, "utf-8");
     const lines = file.split('\n');
 
     const defaultLinesToRead = 200;

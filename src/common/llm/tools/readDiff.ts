@@ -14,10 +14,9 @@ export const createReadDiffTool = (platformProvider: PlatformProvider, workSpace
     }),
     execute: async ({ path }) => {
       try {
-        logger.debug("1111111111")
         const platformOption = platformProvider.getPlatformOption();
-        const diffCommandBase = getDiffCommand(platformOption);
-        const diffCommand = `cd ${workSpace} && ${diffCommandBase} -- "${path}"`;
+        const diffCommandBase = getDiffCommand(platformOption, workSpace);
+        const diffCommand = `${diffCommandBase} -- "${path}"`;
 
         return await new Promise<string>((resolve, reject) => {
           // Use exec like other git commands in the codebase
