@@ -70,10 +70,10 @@ export const getGitRoot = (): Promise<string> => {
     });
 };
 
-export const getChangedFilesNames = async (isCi: string | undefined): Promise<string[]> => {
+export const getChangedFilesNames = async (isCi: string | undefined, workSpace:string|undefined): Promise<string[]> => {
   const gitRoot = await getGitRoot();
   logger.debug('gitRoot', gitRoot);
-  const nameOnlyCommand = getDiffCommand(isCi).replace('-U0', '--name-only');
+  const nameOnlyCommand = getDiffCommand(isCi,workSpace).replace('-U0', '--name-only');
   logger.debug('nameOnlyCommand', nameOnlyCommand);
   return new Promise((resolve, reject) => {
     exec(nameOnlyCommand, { cwd: gitRoot }, (error, stdout, stderr) => {
